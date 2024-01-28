@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 const playSound = () => {
-  new Audio("/gong.mp3").play();
+  new Audio(window.location.href + "gong.mp3").play();
 };
 
 const colors = {
