@@ -64,13 +64,19 @@ const wakeLock = {
   async lock() {
     try {
       this.sentinel = await navigator.wakeLock.request("screen");
+      console.log("Acquired wake lock");
     } catch (e) {
       console.error("Could not acquire wake lock", e);
     }
   },
   unlock() {
-    this.sentinel?.release();
-    this.sentinel = null;
+    if (this.sentinel) {
+      console.log("Releasing wake lock");
+      this.sentinel.release();
+      this.sentinel = null;
+    } else {
+      console.warn("Wake lock already released");
+    }
   },
 };
 
