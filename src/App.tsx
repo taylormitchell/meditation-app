@@ -59,6 +59,21 @@ const Clock = ({ timerValue }: { timerValue: number | null }) => {
   );
 };
 
+const wakeLock = {
+  sentinel: null as WakeLockSentinel | null,
+  async lock() {
+    try {
+      this.sentinel = await navigator.wakeLock.request("screen");
+    } catch (e) {
+      console.error("Could not acquire wake lock", e);
+    }
+  },
+  unlock() {
+    this.sentinel?.release();
+    this.sentinel = null;
+  },
+};
+
 function App() {
   const [meditating, setMeditating] = useState(false);
   const [breaths, setBreaths] = useState<number[]>([]);
@@ -72,16 +87,6 @@ function App() {
 
   const timerValue = useTimer(meditating);
   const countdownValue = useCountdown(duration, meditating);
-
-  console.log({
-    timerValue,
-    duration,
-    playedEndSound,
-    breaths,
-    lapses,
-    startTime,
-    endTime,
-  });
 
   // when we hit the user set duration, play a sound
   useEffect(() => {
@@ -171,6 +176,7 @@ function App() {
                 backgroundColor: colors.aliceBlue,
               }}
               onClick={() => {
+                wakeLock.unlock();
                 setEndTime(Date.now());
                 setMeditating(false);
               }}
@@ -222,6 +228,18 @@ function App() {
                     </div>
                   ))}
               </div>
+              <DownloadButton
+                rows={[
+                  ...breaths.map((tap) => ({
+                    type: "breath",
+                    time: tap - startTime!,
+                  })),
+                  ...lapses.map((tap) => ({
+                    type: "lapse",
+                    time: tap - startTime!,
+                  })),
+                ].sort((a, b) => a.time - b.time)}
+              />
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div>Start new session</div>
@@ -259,6 +277,7 @@ function App() {
               <button
                 style={{ backgroundColor: colors.aliceBlue }}
                 onClick={() => {
+                  wakeLock.lock();
                   playSound();
                   setMeditating(true);
                   setStartTime(Date.now());
@@ -273,6 +292,16 @@ function App() {
         )}
       </div>
     </div>
+  );
+}
+
+function DownloadButton({ rows }: { rows: { type: string; time: number }[] }) {
+  const csvContent = rows.map((row) => `${row.type},${row.time}`).join("\n");
+  const encodedUri = encodeURI(csvContent);
+  return (
+    <a href={"data:text/csv;charset=utf-8," + encodedUri} download="meditation.csv">
+      Download
+    </a>
   );
 }
 
