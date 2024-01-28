@@ -284,6 +284,7 @@ function App() {
               <button
                 style={{ backgroundColor: colors.aliceBlue }}
                 onClick={() => {
+                  console.log("start");
                   wakeLock.lock();
                   playSound();
                   setMeditating(true);

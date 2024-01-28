@@ -17,3 +17,6 @@ git push origin main
 # deploy
 git subtree push --prefix dist origin gh-pages
 
+echo "Deployed successfully."
+echo "Go to https://github.com/taylormitchell/meditation-app/actions to see the status."
+
